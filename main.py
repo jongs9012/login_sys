@@ -4,13 +4,26 @@ import datetime
 
 st.set_page_config(layout='wide', )
 
-def avaliable_account(id, pwd):
-    return True
-
-
+def checking_account(id, pwd):
+    try:
+        list_ = []
+        with open(f"./users/{id}_info.txt", "r") as file:
+            lines = file.readlines()
+            for line in lines:
+                line = line.strip()
+                list_.append(line.split(":"))
+            if list_[1][1] == id and list_[2][1] == pwd:
+                if list_[4][1] == "False":
+                    return (True, False)
+                elif list_[4][1] == "True":
+                    return (True, True)
+            else:
+                return (False, False)
+    except FileNotFoundError:
+        return (False, False)
 
 # User survey
-def survey():
+def survey(id):
     # Sleeping Day or Night ?
     st.subheader("Are you sleeping at Night or Day ?", anchor=False)
     nightOrDay = st.radio("Night or Day", ("Day", "Night"))
@@ -22,27 +35,45 @@ def survey():
     st.subheader(temp)
     reason = str(st.text_input("Please enter reason"))
     if len(reason) >= 1:
-        onceOrNot = st.radio(" ", ("Yes, I usually sleep once at a day.", "No, I'm not sleep once at a day."))
-        st.subheader("How many times a week do you dream ?")
-        dreamingTimes = st.radio("Times you dreaming", ("0 ~ 1 times", "2 ~ 3 times", "4 ~ 5 times", "Others"))
-        qualityDream = st.slider("If you were to grade your sleep?", 0, 100, 70)
-        st.write(f"[ Score : {qualityDream} ]")
         temp = "Are you sleeping at Once?" if sleep_hours == "Others" else f"Are you sleeping {sleep_hours} at Once?"
         st.subheader(temp)
+        onceOrNot = st.radio("Once at a day?", ("Yes, I usually sleep once at a day.", "No, I'm not sleep once at a day."))
+
+        st.subheader("How many times a week do you dream ?")
+        dreamingTimes = st.radio("Times you dreaming", ("0 ~ 1 times", "2 ~ 3 times", "4 ~ 5 times", "Others"))
+        st.subheader("If you were to grade your sleep?")
+        qualityDream = st.slider("Score", 0, 100, 70)
+        st.write(f"[ Score : {qualityDream} ]")
+
         lightState = st.radio("Do you sleep with the lights on?", ("Turn on", "Turn off"))
         st.subheader("")
         st.subheader("_______________________________")
         st.write("Do you agree to provide information?")
         st.write("It's not used for commercial purpose and is used for information analysis.")
         submitBtn = st.button("Submit")
+        if submitBtn:
+            newContent = ""
+            with open(f"./users/{id}_info.txt", "r") as file:
+                lines = file.readlines()
+                for i, l in enumerate(lines):
+                    if list(l.split(":"))[0] == "Surveyed":
+                        newString = "Surveyed:True"
+                    elif list(l.split(":"))[0] != "Surveyed":
+                        newString = l
+                    if newString:
+                        newContent += newString
 
+
+            with open(f"./users/{id}_info.txt", "w") as f:
+                f.write(newContent)
 
 def create_Account(name, id, password, time):
-    userfile = open(f"./users/{name}_info.txt", "w")
-    userfile.write(f"name:{name}\n")
+    userfile = open(f"./users/{id}_info.txt", "w")
+    userfile.write(f"NAME:{name}\n")
     userfile.write(f"ID:{id}\n")
     userfile.write(f"PWD:{password}\n")
-    userfile.write(f"Sign_up_time:{time}")
+    userfile.write(f"SIGN_UP_TIME:{time[0:16]}\n")
+    userfile.write(f"Surveyed:False")
     userfile.close()
     st.success("Sucessfully finished !")
     st.write("Go to login menu to login.")
@@ -70,16 +101,16 @@ def main():
         userID = str(st.sidebar.text_input("Enter ID"))
         userPWD = str(st.sidebar.text_input("Enter Password", type="password"))
 
-        if len(userID) >= 1 and len(userPWD) >= 1:
-            st.sidebar.subheader("Click the box to login \nIf click check box again you will logout")
+        st.sidebar.subheader("Click the box to login \nIf click check box again you will logout")
         loginCheckBox = st.sidebar.checkbox("Login")
-        tested = False  # Receive a value from userinfo.txt
+        checkLogin = checking_account(userID, userPWD)  # Receive a value from userinfo.txt
         if loginCheckBox:
-            if avaliable_account(userID, userPWD):
-                if tested == False:
-                    survey()
+            if checkLogin[0]:
+                if checkLogin[1] == False:
+                    survey(userID)
+
                 else:
-                    st.subheader("Passed")
+                    st.subheader("Successfully Login !")
             # If user doesn't have survey data.
             else:
                 st.sidebar.write("ID or Password is wrong")
@@ -102,7 +133,7 @@ def main():
                 # Save and register user
                 if st.button("Sign UP!"):
                     # Make user file
-                    create_Account(userName, userID, userPWD, datetime.datetime.now())
+                    create_Account(userName, userID, userPWD, str(f"{datetime.datetime.now()}"))
 
 
 
