@@ -1,5 +1,0 @@
-NAME:Yoon Jong Seo
-ID:whdtj9012
-PWD:whdtjtjwhd9012
-SIGN_UP_TIME:2022-02-20 14:17
-Surveyed:True
