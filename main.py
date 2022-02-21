@@ -1,29 +1,31 @@
-from time import sleep
+import os.path
 import streamlit as st
 from datetime import datetime
 
-st.set_page_config(layout='wide', )
+st.set_page_config(layout='wide')
 
-def checking_account(id, pwd):
+
+def checking_account(id_, pwd):
     try:
         list_ = []
-        with open(f"./users/{id}_info.txt", "r") as file:
+        with open(f"./users/{id_}_info.txt", "r") as file:
             lines = file.readlines()
             for line in lines:
                 line = line.strip()
                 list_.append(line.split(":"))
-            if list_[1][1] == id and list_[2][1] == pwd:
+            if list_[1][1] == id_ and list_[2][1] == pwd:
                 if list_[4][1] == "False":
-                    return (True, False)
+                    return True, False
                 elif list_[4][1] == "True":
-                    return (True, True)
+                    return True, True
             else:
-                return (False, False)
+                return False, False
     except FileNotFoundError:
-        return (False, False)
+        return False, False
+
 
 # User survey
-def survey(id):
+def survey(id_):
     # Sleeping Day or Night ?
     st.subheader("Are you sleeping at Night or Day ?", anchor=False)
     night_or_day = st.radio("Night or Day", ("Day", "Night"))
@@ -37,7 +39,8 @@ def survey(id):
     if len(reason) >= 1:
         temp = "Are you sleeping at Once?" if sleep_hours == "Others" else f"Are you sleeping {sleep_hours} at Once?"
         st.subheader(temp)
-        once_or_not = st.radio("Once at a day?", ("Yes, I usually sleep once at a day.", "No, I'm not sleep once at a day."))
+        once_or_not = st.radio("Once at a day?", ("Yes, I usually sleep once at a day.",
+                                                  "No, I'm not sleep once at a day."))
 
         st.subheader("How many times a week do you dream ?")
         dreaming_times = st.radio("Times you dreaming", ("0 ~ 1 times", "2 ~ 3 times", "4 ~ 5 times", "Others"))
@@ -50,29 +53,36 @@ def survey(id):
         div()
         st.write("Do you agree to provide information?")
         st.write("It's not used for commercial purpose and is used for information analysis.")
-        submitBtn = st.button("Submit")
+        submit_btn = st.button("Submit")
 
         # When the survey is finished
-        if submitBtn:
-            newContent = ""
-            with open(f"./users/{id}_info.txt", "r") as file:
+        if submit_btn:
+            new_content = ""
+            with open(f"./users/{id_}_info.txt", "r") as file:
                 lines = file.readlines()
                 for i, l in enumerate(lines):
                     if list(l.split(":"))[0] == "Surveyed":
-                        newString = "Surveyed:True\n"
+                        new_string = "Surveyed:True\n"
                     elif list(l.split(":"))[0] != "Surveyed":
-                        newString = l
-                    if newString:
-                        newContent += newString
-                newContent += f"SleepTime:{night_or_day}\nSleepHours:{sleep_hours}\nWhySleep:{reason}\nSleepingAtOnce:{once_or_not}\nDreamingTimes:{dreaming_times}\nGradeOfSleep:{quality_dream}\nLightState:{light_state}"
+                        new_string = l
+                    if new_string:
+                        new_content += new_string
+                new_content += f"SleepTime:{night_or_day}\n" \
+                               f"SleepHours:{sleep_hours}\n" \
+                               f"WhySleep:{reason}\n" \
+                               f"SleepingAtOnce:{once_or_not}\n" \
+                               f"DreamingTimes:{dreaming_times}\n" \
+                               f"GradeOfSleep:{quality_dream}\n" \
+                               f"LightState:{light_state}"
             # Update the survey
-            with open(f"./users/{id}_info.txt", "w") as f:
-                f.write(newContent)
+            with open(f"./users/{id_}_info.txt", "w") as f:
+                f.write(new_content)
             st.success("Finished ! \n Please Logout and Login again :)")
 
-def read_data(id):
+
+def read_data(id_):
     texts = []
-    with open(f"./users/{id}_info.txt", "r") as file:
+    with open(f"./users/{id_}_info.txt", "r") as file:
         lines = file.readlines()
         for index, line in enumerate(lines):
             data = line.strip().split(":")
@@ -83,29 +93,31 @@ def read_data(id):
     return texts
 
 
-
-def create_Account(name, id, password, time):
-    userfile = open(f"./users/{id}_info.txt", "w")
-    userfile.write(f"NAME:{name}\n")
-    userfile.write(f"ID:{id}\n")
-    userfile.write(f"PWD:{password}\n")
-    userfile.write(f"SIGN_UP_TIME:{time[0:16]}\n")
-    userfile.write(f"Surveyed:False")
-    userfile.close()
-    st.success("Sucessfully finished !")
+def create_account(name, id_, password, time):
+    user_file = open(f"./users/{id_}_info.txt", "w")
+    user_file.write(f"NAME:{name}\n")
+    user_file.write(f"ID:{id_}\n")
+    user_file.write(f"PWD:{password}\n")
+    user_file.write(f"SIGN_UP_TIME:{time[0:16]}\n")
+    user_file.write(f"Surveyed:False")
+    user_file.close()
+    st.success("Successfully finished !")
     st.write("Go to login menu to login.")
+
 
 def div():
     st.subheader("___________________________")
 
+
 def short_div():
     st.subheader("____________________")
 
-def compare_days(userID):
-    format = '%Y-%m-%d %H:%M'
-    userDate = read_data(userID)[3][1]
 
-    date = datetime.strptime(userDate, format)
+def compare_days(user_id):
+    format_ = '%Y-%m-%d %H:%M'
+    user_date = read_data(user_id)[3][1]
+
+    date = datetime.strptime(user_date, format_)
     now = datetime.now()
     date_diff = now - date
     return date_diff.days, int(date_diff.seconds/3600)
@@ -117,44 +129,43 @@ def main():
 
     # Sidebar Menu
     menu = ["Main", "Login", "Sign Up"]
-    choose = st.sidebar.selectbox("Menu",menu)
+    choose = st.sidebar.selectbox("Menu", menu)
     div()
 
     # Main page
     if choose == "Main":
         st.write("Click the button on left top to open sidebar")
 
-
     # Login page
     if choose == "Login":
-        st.subheader("Sign in to see fancy datas!", anchor=False)
+        st.subheader("Sign in to see fancy data!", anchor=False)
 
-        userID = str(st.sidebar.text_input("Enter ID"))
-        userPWD = str(st.sidebar.text_input("Enter Password", type="password"))
+        user_id = str(st.sidebar.text_input("Enter ID"))
+        user_pwd = str(st.sidebar.text_input("Enter Password", type="password"))
 
         st.sidebar.subheader("Click the box to login \nIf click check box again you will logout")
-        loginCheckBox = st.sidebar.checkbox("Login")
-        checkLogin = checking_account(userID, userPWD)  # Receive a value from userinfo.txt
-        if loginCheckBox:
+        login_check_box = st.sidebar.checkbox("Login")
+        check_login = checking_account(user_id, user_pwd)  # Receive a value from userinfo.txt
+        if login_check_box:
 
             # Correct ID / PW
-            if checkLogin[0]:
+            if check_login[0]:
                 # If user doesn't have survey data.
-                if checkLogin[1] == False:
-                    survey(userID)
+                if check_login[1] is False:
+                    survey(user_id)
 
                 # After Surveyed
                 else:
-                    userData = read_data(userID)
+                    user_data = read_data(user_id)
 
-                    # Beta alart
-                    st.warning("This is beva version. Many things are not working :(")
+                    # Beta alarm
+                    st.warning("This is beta version. Many things are not working :(")
 
                     c1, c2, c3, c4 = st.columns(4)
                     with c1:
-                        st.subheader(f"Hi ! {userData[0][1]}")
+                        st.subheader(f"Hi ! {user_data[0][1]}")
                         select_bar = ["Home", "Main", "My info"]
-                        main_select_box = st.selectbox("Choose menu",select_bar)
+                        main_select_box = st.selectbox("Choose menu", select_bar)
                     with c2:
                         # Home Menu
                         if main_select_box == "Home":
@@ -170,69 +181,72 @@ def main():
                                 st.subheader("Quality of sleep")
                                 st.subheader("Light state")
 
-
                         # My info
                         if main_select_box == "My info":
-                          # with c2:
-                            short_div()
-                            st.subheader(f"User Id")
-                            st.subheader(f"{userData[1][1]}")
 
-                            date_diff = compare_days(userID)
-                            short_div()
-                            st.subheader(f"Day we spend together")
-                            st.subheader(f"{date_diff[0]} Days, {date_diff[1]} Hours")
-                            with c3:
+                            with c1:
+                                info_menu = ["Account", "Survey Info"]
+                                info_choose = st.selectbox("Menu", info_menu)
+                            # with c2:
+                            if info_choose == "Account":
+                                short_div()
+                                st.subheader(f"User Id")
+                                st.subheader(f"{user_data[1][1]}")
+                                with c3:
+                                    date_diff = compare_days(user_id)
+                                    short_div()
+                                    st.subheader(f"Day we spend together")
+                                    st.subheader(f"{date_diff[0]} Days, {date_diff[1]} Hours")
+                            if info_choose == "Survey Info":
+
                                 short_div()
                                 st.subheader("Sleep type")
-                                st.subheader(f"{userData[5][1]}")
+                                st.subheader(f"{user_data[5][1]}")
                                 short_div()
                                 st.subheader("Sleeping Hours")
-                                st.subheader(f"{userData[6][1]}")
-                                short_div()
-                                st.subheader("Reason about sleeping hours")
-                                st.subheader(f"{userData[7][1]}")
-                                short_div()
-                                st.subheader("Sleeping at once ?")
-                                st.subheader(f"{userData[8][1][0:2]}.")
-                            with c4:
-                                short_div()
-                                st.subheader("How often you dreaming ?")
-                                st.subheader(f"{userData[9][1]} times")
-                                short_div()
-                                st.subheader("Grade of sleeping")
-                                st.subheader(f"Score : {userData[10][1]}")
-                                short_div()
-                                st.subheader("Turn on light when sleeping ?")
-                                st.subheader(f"{userData[11][1]}")
+                                st.subheader(f"{user_data[6][1]}")
+                                with c3:
+                                    short_div()
+                                    st.subheader("Reason about sleeping hours")
+                                    st.subheader(f"{user_data[7][1]}")
+                                    short_div()
+                                    st.subheader("Sleeping at once ?")
+                                    st.subheader(f"{user_data[8][1][0:2]}.")
+                                with c4:
+                                    short_div()
+                                    st.subheader("How often you dreaming ?")
+                                    st.subheader(f"{user_data[9][1]} times")
+                                    short_div()
+                                    st.subheader("Grade of sleeping")
+                                    st.subheader(f"Score : {user_data[10][1]}")
+                                    short_div()
+                                    st.subheader("Turn on light when sleeping ?")
+                                    st.subheader(f"{user_data[11][1]}")
 
             # Wrong password
             else:
                 st.sidebar.write("ID or Password is wrong")
 
-
-
     # Sign up page
     if choose == "Sign Up":
         st.subheader("Thanks for joining us", anchor=False)
         st.header("Name")
-        userName = str(st.text_input("Enter your name"))
+        user_name = str(st.text_input("Enter your name"))
         st.header("ID / PW", anchor=None)
-        userID = str(st.text_input("Make wonderful ID"))
-        userPWD = str(st.text_input("Ridicules password is the best", type="password"))
-        if len(userPWD) <= 8 and userPWD != None:
+        user_id = str(st.text_input("Make wonderful ID"))
+        user_pwd = str(st.text_input("Ridicules password is the best", type="password"))
+        if len(user_pwd) <= 8 and user_pwd is not None:
             st.info("We recommend you to make long password")
-        if (len(userID) >= 2) and (len(userPWD) >= 2) and (len(userName) >= 2):
+        if (len(user_id) >= 2) and (len(user_pwd) >= 2) and (len(user_name) >= 2):
             if st.checkbox("Agree to save my info"):
                 # Save and register user
                 if st.button("Sign UP!"):
                     # Make user file
-                    create_Account(userName, userID, userPWD, str(f"{datetime.now()}"))
-
-
+                    if os.path.exists(f"./users/{user_id}_info.txt"):
+                        st.warning("This id is already existence. Please use another ID.")
+                    else:
+                        create_Account(user_name, user_id, user_pwd, str(f"{datetime.now()}"))
 
 
 if __name__ == '__main__':
     main()
-
-
