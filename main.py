@@ -1,8 +1,21 @@
-import os.path
+from os import path, listdir
 import streamlit as st
 from datetime import datetime
 
 st.set_page_config(layout='wide')
+
+
+def read_data(id_):
+    return_value = []
+    with open(f"./users/{id_}_info.txt", "r") as file:
+        lines = file.readlines()
+        for index, line in enumerate(lines):
+            data = line.strip().split(":")
+            if data[0] == "SIGN_UP_TIME":
+                data[1] = data[1] + ":" + data[2]
+                data.pop(2)
+            return_value.append(data)
+    return return_value
 
 
 def checking_account(id_, pwd):
@@ -11,6 +24,7 @@ def checking_account(id_, pwd):
         with open(f"./users/{id_}_info.txt", "r") as file:
             lines = file.readlines()
             for line in lines:
+                line = line.strip()
                 line = line.strip()
                 list_.append(line.split(":"))
             if list_[1][1] == id_ and list_[2][1] == pwd:
@@ -80,17 +94,29 @@ def survey(id_):
             st.success("Finished ! \n Please Logout and Login again :)")
 
 
-def read_data(id_):
-    texts = []
-    with open(f"./users/{id_}_info.txt", "r") as file:
-        lines = file.readlines()
-        for index, line in enumerate(lines):
-            data = line.strip().split(":")
-            if data[0] == "SIGN_UP_TIME":
-                data[1] = data[1] + ":" + data[2]
-                data.pop(2)
-            texts.append(data)
-    return texts
+def scrap_data():
+    all_data = []
+    for filename in listdir("./users"):
+        print("File name :", filename)
+        '''
+        with open(path.join("./users", filename), "r") as f:
+            text = f.read()
+        '''
+        all_data.append(read_data(filename[0:-9]))
+    return all_data
+
+
+def find_average(index):
+    data_list = []
+    for filename in listdir("./users"):
+        data_list.append(read_data(filename[0:-9]))
+    value_list = []
+    for i, value in enumerate(data_list):
+        if value[4][1] == "True":
+            value_list.append(value[index][1])
+        else:
+            pass
+    return value_list
 
 
 def create_account(name, id_, password, time):
@@ -110,7 +136,7 @@ def div():
 
 
 def short_div():
-    st.subheader("____________________")
+    st.subheader("____")
 
 
 def compare_days(user_id):
@@ -160,12 +186,13 @@ def main():
 
                     # Beta alarm
                     st.warning("This is beta version. Many things are not working :(")
-
                     c1, c2, c3, c4 = st.columns(4)
+
                     with c1:
                         st.subheader(f"Hi ! {user_data[0][1]}")
                         select_bar = ["Home", "Main", "My info"]
                         main_select_box = st.selectbox("Choose menu", select_bar)
+
                     with c2:
                         # Home Menu
                         if main_select_box == "Home":
@@ -175,11 +202,15 @@ def main():
                         if main_select_box == "Main":
                             # with c2:
                             st.subheader("Average Sleep time")
+                            st.write(find_average(6))
                             st.subheader("Grade of Sleep")
+                            st.write(find_average(10))
 
                             with c3:
                                 st.subheader("Quality of sleep")
+                                st.write(find_average(8))
                                 st.subheader("Light state")
+                                st.write(find_average(11))
 
                         # My info
                         if main_select_box == "My info":
@@ -211,7 +242,7 @@ def main():
                                     st.subheader(f"{user_data[7][1]}")
                                     short_div()
                                     st.subheader("Sleeping at once ?")
-                                    st.subheader(f"{user_data[8][1][0:2]}.")
+                                    st.subheader(f"{user_data[8][1][0:3]}.")
                                 with c4:
                                     short_div()
                                     st.subheader("How often you dreaming ?")
@@ -242,10 +273,10 @@ def main():
                 # Save and register user
                 if st.button("Sign UP!"):
                     # Make user file
-                    if os.path.exists(f"./users/{user_id}_info.txt"):
+                    if path.exists(f"./users/{user_id}_info.txt"):
                         st.warning("This id is already existence. Please use another ID.")
                     else:
-                        create_Account(user_name, user_id, user_pwd, str(f"{datetime.now()}"))
+                        create_account(user_name, user_id, user_pwd, str(f"{datetime.now()}"))
 
 
 if __name__ == '__main__':
